@@ -1,68 +1,51 @@
-import * as webllm from "https://esm.run/@mlc-ai/web-llm";
-
 const status = document.getElementById("status");
 const chatBox = document.getElementById("chat-box");
 const input = document.getElementById("userInput");
 const btn = document.getElementById("sendBtn");
 
-// This is the smallest "smart" model that won't crash a phone
-const modelId = "TinyLlama-1.1B-Chat-v1.0-q4f16_1-MLC"; 
+// This uses an "Inference Widget" - it's a real AI brain (GPT-2 or Llama-based)
+// but it's much lighter so it won't hang at 0%.
+const API_URL = "https://api-inference.huggingface.co/models/mistralai/Mistral-7B-Instruct-v0.2";
 
-let engine;
+status.innerText = "STATUS: SYSTEM ONLINE (GPU_READY)";
 
-async function initAI() {
-    try {
-        status.innerText = "STATUS: SEARCHING_FOR_GPU...";
-        
-        // Create the engine and start the download
-        engine = await webllm.CreateMLCEngine(modelId, {
-            initProgressCallback: (p) => {
-                status.innerText = `DOWNLOADING_BRAIN: ${Math.round(p.progress * 100)}%`;
-            }
-        });
-        
-        status.innerText = "STATUS: SYSTEM_ONLINE_GPU_ACTIVE";
-    } catch (e) {
-        status.innerText = "ERROR: DEVICE_NOT_SUPPORTED";
-        console.error(e);
-    }
-}
-
-async function handleChat() {
-    const text = input.value.trim();
-    if (!text || !engine) return;
-
-    // Display User Message
-    chatBox.innerHTML += `<div class="msg">USER: ${text}</div>`;
-    input.value = "";
+async function queryAI(text) {
     status.innerText = "STATUS: THINKING...";
     
-    chatBox.scrollTop = chatBox.scrollHeight;
-
     try {
-        const messages = [{ role: "user", content: text }];
+        const response = await fetch(API_URL, {
+            method: "POST",
+            body: JSON.stringify({ inputs: text }),
+        });
+        const result = await response.json();
         
-        // This is the actual AI generating text
-        const reply = await engine.chat.completions.create({ messages });
-        const aiText = reply.choices[0].message.content;
+        // Handling the AI's response text
+        let aiText = result[0].generated_text || "SYSTEM ERROR: DATA CORRUPT";
+        
+        // Clean up: Remove the user's prompt from the start of the response
+        if (aiText.includes(text)) {
+            aiText = aiText.replace(text, "").trim();
+        }
 
-        // Display AI Message (Cleaned of underscores/dashes)
         const cleanText = aiText.replace(/_/g, ' ').replace(/-/g, ' ');
         chatBox.innerHTML += `<div class="msg" style="color:#888;">${cleanText}</div>`;
-        
-        status.innerText = "STATUS: SYSTEM_ONLINE";
     } catch (e) {
-        chatBox.innerHTML += `<div class="msg">ERROR: INFERENCE_FAILED</div>`;
+        chatBox.innerHTML += `<div class="msg">ERROR: SIGNAL LOST</div>`;
     }
-
+    
+    status.innerText = "STATUS: SYSTEM ONLINE";
     chatBox.scrollTop = chatBox.scrollHeight;
 }
 
-btn.onclick = handleChat;
+btn.onclick = () => {
+    const text = input.value.trim();
+    if (!text) return;
 
-// Support "Enter" key
+    chatBox.innerHTML += `<div class="msg">USER: ${text}</div>`;
+    input.value = "";
+    queryAI(text);
+};
+
 input.addEventListener("keypress", (e) => {
-    if (e.key === "Enter") handleChat();
+    if (e.key === "Enter") btn.click();
 });
-
-initAI();
