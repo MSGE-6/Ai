@@ -1,0 +1,77 @@
+body {
+    background-color: #000;
+    color: #fff;
+    font-family: 'Courier New', monospace;
+    margin: 0;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    height: 100vh;
+    overflow: hidden;
+}
+
+.terminal {
+    width: 90%;
+    max-width: 500px;
+    height: 80vh;
+    border: 1px solid #fff;
+    padding: 20px;
+    display: flex;
+    flex-direction: column;
+    background: #000;
+}
+
+.header {
+    font-weight: bold;
+    letter-spacing: 2px;
+}
+
+#status {
+    font-size: 10px;
+    color: #666;
+    margin-top: 5px;
+}
+
+hr {
+    border: 0;
+    border-top: 1px solid #333;
+    margin: 15px 0;
+}
+
+#chat-box {
+    flex-grow: 1;
+    overflow-y: auto;
+    margin-bottom: 10px;
+    font-size: 14px;
+    line-height: 1.5;
+}
+
+.msg { margin-bottom: 12px; }
+
+.input-area {
+    display: flex;
+    gap: 10px;
+}
+
+input {
+    flex-grow: 1;
+    background: #000;
+    border: 1px solid #fff;
+    color: #fff;
+    padding: 12px;
+    outline: none;
+    font-family: inherit;
+}
+
+button {
+    background: #fff;
+    color: #000;
+    border: none;
+    padding: 0 20px;
+    font-weight: bold;
+    cursor: pointer;
+    font-family: inherit;
+}
+
+/* Hide scrollbar but keep functionality */
+#chat-box::-webkit-scrollbar { display: none; }
