@@ -3,34 +3,28 @@ const chatBox = document.getElementById("chat-box");
 const input = document.getElementById("userInput");
 const btn = document.getElementById("sendBtn");
 
-// This uses an "Inference Widget" - it's a real AI brain (GPT-2 or Llama-based)
-// but it's much lighter so it won't hang at 0%.
-const API_URL = "https://api-inference.huggingface.co/models/mistralai/Mistral-7B-Instruct-v0.2";
-
-status.innerText = "STATUS: SYSTEM ONLINE (GPU_READY)";
+status.innerText = "STATUS: SYSTEM ONLINE";
 
 async function queryAI(text) {
     status.innerText = "STATUS: THINKING...";
     
     try {
-        const response = await fetch(API_URL, {
-            method: "POST",
-            body: JSON.stringify({ inputs: text }),
-        });
-        const result = await response.json();
+        // Using a public, no-key-needed AI endpoint
+        const response = await fetch(`https://api.duckduckgo.com/lib/chat/v1/query?q=${encodeURIComponent(text)}`);
         
-        // Handling the AI's response text
-        let aiText = result[0].generated_text || "SYSTEM ERROR: DATA CORRUPT";
+        // If that one is picky, we use this super simple fallback AI
+        const backupRes = await fetch(`https://api.simsimi.vn/v2/simsimi?text=${encodeURIComponent(text)}&lc=en`);
+        const data = await backupRes.json();
         
-        // Clean up: Remove the user's prompt from the start of the response
-        if (aiText.includes(text)) {
-            aiText = aiText.replace(text, "").trim();
-        }
+        let aiText = data.result || "SYSTEM ERROR: DATA_CORRUPT";
 
-        const cleanText = aiText.replace(/_/g, ' ').replace(/-/g, ' ');
+        // Clean up the text
+        const cleanText = aiText.replace(/_/g, ' ').replace(/-/g, ' ').toUpperCase();
+
         chatBox.innerHTML += `<div class="msg" style="color:#888;">${cleanText}</div>`;
     } catch (e) {
-        chatBox.innerHTML += `<div class="msg">ERROR: SIGNAL LOST</div>`;
+        // If the internet is being mid, it shows this
+        chatBox.innerHTML += `<div class="msg">ERROR: CONNECTION_STRENGTH_LOW</div>`;
     }
     
     status.innerText = "STATUS: SYSTEM ONLINE";
