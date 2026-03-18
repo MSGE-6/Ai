@@ -3,43 +3,52 @@ const chatBox = document.getElementById("chat-box");
 const input = document.getElementById("userInput");
 const btn = document.getElementById("sendBtn");
 
-status.innerText = "STATUS: SYSTEM ONLINE";
+// We pull in a different, more stable AI library
+const script = document.createElement('script');
+script.src = "https://unpkg.com/brain.js";
+document.head.appendChild(script);
 
-async function queryAI(text) {
-    status.innerText = "STATUS: THINKING...";
+script.onload = () => {
+    status.innerText = "STATUS: NEURAL ENGINE ONLINE";
     
-    try {
-        // Using a public, no-key-needed AI endpoint
-        const response = await fetch(`https://api.duckduckgo.com/lib/chat/v1/query?q=${encodeURIComponent(text)}`);
-        
-        // If that one is picky, we use this super simple fallback AI
-        const backupRes = await fetch(`https://api.simsimi.vn/v2/simsimi?text=${encodeURIComponent(text)}&lc=en`);
-        const data = await backupRes.json();
-        
-        let aiText = data.result || "SYSTEM ERROR: DATA_CORRUPT";
+    // 1. Create the Brain
+    const net = new brain.recurrent.LSTM();
 
-        // Clean up the text
-        const cleanText = aiText.replace(/_/g, ' ').replace(/-/g, ' ').toUpperCase();
+    // 2. Give it "Actual" Intelligence (Training)
+    // This is real AI training, just on a small scale for your phone
+    const trainingData = [
+        { input: "hello", output: "GREETINGS. SYSTEM IS FULLY OPERATIONAL." },
+        { input: "how are you", output: "CORE TEMPERATURE IS OPTIMAL. VIBES ARE HIGH." },
+        { input: "who made you", output: "I WAS CONSTRUCTED BY A HIGH LEVEL DEVELOPER ON AN IPHONE." },
+        { input: "what is your name", output: "MY DESIGNATION IS CORE V1." },
+        { input: "bye", output: "SYSTEM ENTERING SLEEP MODE. GOODBYE." }
+    ];
 
-        chatBox.innerHTML += `<div class="msg" style="color:#888;">${cleanText}</div>`;
-    } catch (e) {
-        // If the internet is being mid, it shows this
-        chatBox.innerHTML += `<div class="msg">ERROR: CONNECTION_STRENGTH_LOW</div>`;
-    }
+    status.innerText = "STATUS: TRAINING BRAIN...";
+    
+    // This part is the "Actual AI" part - it's learning the words
+    net.train(trainingData, { iterations: 100, log: true });
     
     status.innerText = "STATUS: SYSTEM ONLINE";
-    chatBox.scrollTop = chatBox.scrollHeight;
-}
 
-btn.onclick = () => {
-    const text = input.value.trim();
-    if (!text) return;
+    btn.onclick = () => {
+        const text = input.value.toLowerCase().trim();
+        if (!text) return;
 
-    chatBox.innerHTML += `<div class="msg">USER: ${text}</div>`;
-    input.value = "";
-    queryAI(text);
+        chatBox.innerHTML += `<div class="msg">USER: ${text.toUpperCase()}</div>`;
+        input.value = "";
+        status.innerText = "STATUS: INFERENCE ACTIVE...";
+
+        setTimeout(() => {
+            // 3. The AI "Guesses" the response based on its training
+            const aiText = net.run(text) || "INPUT NOT RECOGNIZED. DATA FRAGMENTED.";
+            
+            const cleanText = aiText.replace(/_/g, ' ').replace(/-/g, ' ').toUpperCase();
+            chatBox.innerHTML += `<div class="msg" style="color:#888;">${cleanText}</div>`;
+            status.innerText = "STATUS: SYSTEM ONLINE";
+            chatBox.scrollTop = chatBox.scrollHeight;
+        }, 500);
+    };
 };
 
-input.addEventListener("keypress", (e) => {
-    if (e.key === "Enter") btn.click();
-});
+input.addEventListener("keypress", (e) => { if (e.key === "Enter") btn.click(); });
