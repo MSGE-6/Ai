@@ -3,52 +3,58 @@ const chatBox = document.getElementById("chat-box");
 const input = document.getElementById("userInput");
 const btn = document.getElementById("sendBtn");
 
-// We pull in a different, more stable AI library
-const script = document.createElement('script');
-script.src = "https://unpkg.com/brain.js";
-document.head.appendChild(script);
+// THE BRAIN: Internal Neural-Style Logic
+const aiMemory = [
+    { keys: ["hello", "hi", "yo", "hey", "greetings"], response: "CORE ONLINE. GREETINGS USER. DATA STREAMS STABLE." },
+    { keys: ["who are you", "what are you"], response: "I AM NEURAL CORE V1. A LOCALLY HOSTED ARTIFICIAL INTELLIGENCE." },
+    { keys: ["vibe", "mood", "check"], response: "SCANNING HARDWARE... VIBE IS OPTIMAL. GPU ACCELERATION ACTIVE." },
+    { keys: ["smart", "ai", "think"], response: "MY NEURAL WEIGHTS ARE CALCULATING YOUR INPUT IN REAL TIME." },
+    { keys: ["help", "commands"], response: "AVAILABLE PROTOCOLS: HELLO, VIBE, IDENTITY, CLEAR." },
+    { keys: ["bye", "exit", "stop"], response: "SYSTEM ENTERING SLEEP MODE. STANDBY..." }
+];
 
-script.onload = () => {
-    status.innerText = "STATUS: NEURAL ENGINE ONLINE";
-    
-    // 1. Create the Brain
-    const net = new brain.recurrent.LSTM();
+status.innerText = "STATUS: SYSTEM ONLINE (LOCAL_CORE)";
 
-    // 2. Give it "Actual" Intelligence (Training)
-    // This is real AI training, just on a small scale for your phone
-    const trainingData = [
-        { input: "hello", output: "GREETINGS. SYSTEM IS FULLY OPERATIONAL." },
-        { input: "how are you", output: "CORE TEMPERATURE IS OPTIMAL. VIBES ARE HIGH." },
-        { input: "who made you", output: "I WAS CONSTRUCTED BY A HIGH LEVEL DEVELOPER ON AN IPHONE." },
-        { input: "what is your name", output: "MY DESIGNATION IS CORE V1." },
-        { input: "bye", output: "SYSTEM ENTERING SLEEP MODE. GOODBYE." }
-    ];
+function processAI(text) {
+    const userWords = text.toLowerCase().split(" ");
+    let bestMatch = null;
+    let highestScore = 0;
 
-    status.innerText = "STATUS: TRAINING BRAIN...";
-    
-    // This part is the "Actual AI" part - it's learning the words
-    net.train(trainingData, { iterations: 100, log: true });
-    
-    status.innerText = "STATUS: SYSTEM ONLINE";
+    // This is the "Inference" - it scores the best response
+    aiMemory.forEach(item => {
+        let score = 0;
+        item.keys.forEach(key => {
+            if (userWords.includes(key)) score++;
+        });
+        
+        if (score > highestScore) {
+            highestScore = score;
+            bestMatch = item.response;
+        }
+    });
 
-    btn.onclick = () => {
-        const text = input.value.toLowerCase().trim();
-        if (!text) return;
+    return bestMatch || "INPUT RECEIVED. ANALYZING DATA FRAGMENTS... NO MATCH FOUND.";
+}
 
-        chatBox.innerHTML += `<div class="msg">USER: ${text.toUpperCase()}</div>`;
-        input.value = "";
-        status.innerText = "STATUS: INFERENCE ACTIVE...";
+btn.onclick = () => {
+    const text = input.value.trim();
+    if (!text) return;
 
-        setTimeout(() => {
-            // 3. The AI "Guesses" the response based on its training
-            const aiText = net.run(text) || "INPUT NOT RECOGNIZED. DATA FRAGMENTED.";
-            
-            const cleanText = aiText.replace(/_/g, ' ').replace(/-/g, ' ').toUpperCase();
-            chatBox.innerHTML += `<div class="msg" style="color:#888;">${cleanText}</div>`;
-            status.innerText = "STATUS: SYSTEM ONLINE";
-            chatBox.scrollTop = chatBox.scrollHeight;
-        }, 500);
-    };
+    // Show User Message
+    chatBox.innerHTML += `<div style="margin-bottom:15px;">USER: ${text.toUpperCase()}</div>`;
+    input.value = "";
+    status.innerText = "STATUS: PROCESSING...";
+
+    // Simulated "Thinking" Delay
+    setTimeout(() => {
+        const response = processAI(text);
+        const cleanResponse = response.replace(/_/g, ' ').replace(/-/g, ' ');
+
+        chatBox.innerHTML += `<div style="margin-bottom:15px; color:#888;">${cleanResponse}</div>`;
+        status.innerText = "STATUS: SYSTEM ONLINE";
+        chatBox.scrollTop = chatBox.scrollHeight;
+    }, 400);
 };
 
+// Enter key support
 input.addEventListener("keypress", (e) => { if (e.key === "Enter") btn.click(); });
